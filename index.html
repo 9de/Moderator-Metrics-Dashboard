@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Moderation Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">
+                <i class="fas fa-shield-alt"></i>
+                Moderation Dashboard
+            </div>
+            <div class="sidebar-subtitle">v2.1</div>
+        </div>
+        <ul class="nav-items">
+            <li class="nav-item active" onclick="showPage('overview')">
+                <i class="fas fa-chart-line"></i>
+                Overview
+            </li>
+            <li class="nav-item" onclick="showPage('moderators')">
+                <i class="fas fa-users"></i>
+                Moderators
+            </li>
+            <li class="nav-item" onclick="showPage('settings')">
+                <i class="fas fa-cog"></i>
+                Settings
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="last-update">
+                Last Update: <span id="lastUpdate">Never</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="header-actions">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                <i class="fas fa-moon"></i>
+                <span>Toggle Theme</span>
+            </button>
+            <button class="api-button" onclick="fetchFromApi()" title="Fetch Latest Data">
+                <i class="fas fa-sync-alt"></i>
+                <span>Fetch API Data</span>
+            </button>
+            <div class="loading-spinner"></div>
+            <button class="export-button" onclick="exportData()" title="Export Data">
+                <i class="fas fa-download"></i>
+                <span>Export</span>
+            </button>
+        </div>
+
+        <div id="overview" class="page active">
+            <header class="page-header">
+                <h1 class="page-title">Overview</h1>
+                <p class="page-subtitle">Comprehensive moderation statistics and analysis</p>
+            </header>
+
+            <div class="stats-grid">
+                <!-- Total Stats -->
+                <div class="stat-card total">
+                    <div class="stat-title">All-time Total Bans</div>
+                    <div id="totalBansAlltime" class="stat-value">0</div>
+                    <div class="stat-breakdown">
+                        <div class="breakdown-item">
+                            <span class="label">Anti-Cheat:</span>
+                            <span id="watchdogBansAlltime" class="value">0</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="label">Moderators:</span>
+                            <span id="moderatorBansAlltime" class="value">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card total">
+                    <div class="stat-title">All-time Total Mutes</div>
+                    <div id="totalMutesAlltime" class="stat-value">0</div>
+                    <div class="stat-breakdown">
+                        <div class="breakdown-item">
+                            <span class="label">Anti-Cheat:</span>
+                            <span id="watchdogMutesAlltime" class="value">0</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="label">Moderators:</span>
+                            <span id="moderatorMutesAlltime" class="value">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Monthly Stats -->
+                <div class="stat-card">
+                    <div class="stat-title">Monthly Stats</div>
+                    <div id="totalActionsMonthly" class="stat-value">0</div>
+                    <div class="stat-breakdown">
+                        <div class="breakdown-item">
+                            <span class="label">Bans:</span>
+                            <span id="totalBansMonthly" class="value">0</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="label">Mutes:</span>
+                            <span id="totalMutesMonthly" class="value">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Weekly Stats -->
+                <div class="stat-card">
+                    <div class="stat-title">Weekly Stats</div>
+                    <div id="totalActionsWeekly" class="stat-value">0</div>
+                    <div class="stat-breakdown">
+                        <div class="breakdown-item">
+                            <span class="label">Bans:</span>
+                            <span id="totalBansWeekly" class="value">0</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="label">Mutes:</span>
+                            <span id="totalMutesWeekly" class="value">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <!-- Trend Chart -->
+                <div class="card full-width">
+                    <div class="chart-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-line"></i>
+                            Actions Trend
+                        </h2>
+                        <div class="chart-filters">
+                            <select id="trendActionFilter" class="filter-input" onchange="updateTrendChart()">
+                                <option value="all">All Actions</option>
+                                <option value="bans">Bans Only</option>
+                                <option value="mutes">Mutes Only</option>
+                            </select>
+                            <select id="trendTimeFilter" class="filter-input" onchange="updateTrendChart()">
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="alltime">All Time</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Bans Chart -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-ban"></i>
+                        Top 5 Banned Users
+                    </h2>
+                    <div class="chart-container">
+                        <canvas id="bansChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Mutes Chart -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-microphone-slash"></i>
+                        Top 5 Muted Users
+                    </h2>
+                    <div class="chart-container">
+                        <canvas id="mutesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card input-section">
+                <h2 class="card-title">Manual Data Input</h2>
+                <textarea id="jsonInput" placeholder="Paste your JSON moderation data here..."></textarea>
+                <div class="button-group">
+                    <button class="button" onclick="loadData()">
+                        <i class="fas fa-check"></i>
+                        Analyze Data
+                    </button>
+                    <button class="button secondary" onclick="clearData()">
+                        <i class="fas fa-trash"></i>
+                        Clear
+                    </button>
+                </div>
+                <div id="error" class="error"></div>
+            </div>
+        </div>
+
+        <div id="moderators" class="page">
+            <header class="page-header">
+                <h1 class="page-title">Moderators</h1>
+                <p class="page-subtitle">Staff performance and statistics</p>
+            </header>
+            
+            <div class="filters-section">
+                <select id="timeFilter" class="filter-input" onchange="applyFilters()">
+                    <option value="alltime">All Time</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                </select>
+                
+                <select id="typeFilter" class="filter-input" onchange="applyFilters()">
+                    <option value="all">All Actions</option>
+                    <option value="bans">Bans Only</option>
+                    <option value="mutes">Mutes Only</option>
+                </select>
+                
+                <input type="text" 
+                       id="searchFilter" 
+                       class="filter-input" 
+                       placeholder="Search moderators..."
+                       onchange="applyFilters()"
+                       oninput="applyFilters()">
+            </div>
+
+            <div class="moderator-grid">
+                <table class="moderator-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortModerators('username')" class="sort-indicator">
+                                <i class="fas fa-user"></i>
+                                Moderator
+                            </th>
+                            <th onclick="sortModerators('bans')" class="sort-indicator">
+                                <i class="fas fa-gavel"></i>
+                                Bans
+                            </th>
+                            <th onclick="sortModerators('mutes')" class="sort-indicator">
+                                <i class="fas fa-volume-mute"></i>
+                                Mutes
+                            </th>
+                            <th onclick="sortModerators('total')" class="sort-indicator">
+                                <i class="fas fa-chart-bar"></i>
+                                Total Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="moderatorList">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="settings" class="page">
+            <header class="page-header">
+                <h1 class="page-title">Settings</h1>
+                <p class="page-subtitle">Dashboard configuration</p>
+            </header>
+
+            <div class="card">
+                <h2 class="card-title">API Configuration</h2>
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label for="apiEndpoint">API Endpoint</label>
+                        <input type="text" id="apiEndpoint" class="filter-input" 
+                               placeholder="Enter API endpoint URL">
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKey">API Key</label>
+                        <input type="password" id="apiKey" class="filter-input" 
+                               placeholder="Enter API key">
+                    </div>
+                    <button class="button" onclick="saveSettings()">
+                        <i class="fas fa-save"></i>
+                        Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="index.js"></script>
+</body>
+</html>
